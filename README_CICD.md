@@ -21,11 +21,7 @@ DROSERA_PRIVATE_KEY_SERVER1 = 0x123abc...
 DROSERA_PRIVATE_KEY_SERVER2 = 0x456def...
 ```
 
-#### IP адреса серверов:
-```
-VPS_IP_SERVER1 = внешний_IP_первого_сервера
-VPS_IP_SERVER2 = внешний_IP_второго_сервера
-```
+
 
 #### RPC настройки:
 ```

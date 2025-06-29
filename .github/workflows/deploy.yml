@@ -49,7 +49,7 @@ jobs:
             # Создание .env файла для Docker Compose
             cat > .env << EOF
             ETH_PRIVATE_KEY=${{ secrets[format('DROSERA_PRIVATE_KEY_SERVER{0}', matrix.server)] }}
-            VPS_IP=${{ secrets[format('VPS_IP_SERVER{0}', matrix.server)] }}
+            VPS_IP=${{ secrets[format('SERVER{0}_HOST', matrix.server)] }}
             HOLESKY_RPC_URL=${{ secrets.HOLESKY_RPC_URL }}
             BACKUP_RPC_URL=${{ secrets.BACKUP_RPC_URL }}
             EOF
