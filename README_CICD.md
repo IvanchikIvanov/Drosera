@@ -31,10 +31,7 @@ BACKUP_RPC_URL = https://ethereum-holesky-rpc.publicnode.com
 
 
 
-#### Уведомления (опционально):
-```
-DISCORD_WEBHOOK = https://discord.com/api/webhooks/...
-```
+
 
 ### 2. Создание SSH ключей
 

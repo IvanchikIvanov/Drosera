@@ -100,16 +100,4 @@ jobs:
             
             echo "✅ Deployment completed on Server ${{ matrix.server }}"
 
-  notify:
-    needs: deploy
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-      - name: Notify Discord
-        if: secrets.DISCORD_WEBHOOK != ''
-        uses: sarisia/actions-status-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK }}
-          status: ${{ job.status }}
-          title: "Drosera Deployment"
-          description: "Deployment ${{ job.status }} for commit ${{ github.sha }}" 
+ 

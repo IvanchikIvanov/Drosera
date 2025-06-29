@@ -48,11 +48,4 @@ jobs:
             
             echo "✅ Server ${{ matrix.server }} is healthy"
 
-      - name: Notify if unhealthy
-        if: failure()
-        uses: sarisia/actions-status-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK }}
-          status: "failure"
-          title: "🚨 Drosera Health Check Failed"
-          description: "Server ${{ matrix.server }} health check failed!" 
+ 
