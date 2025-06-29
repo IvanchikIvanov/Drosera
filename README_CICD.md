@@ -29,11 +29,7 @@ HOLESKY_RPC_URL = https://ваш-holesky-rpc.com
 BACKUP_RPC_URL = https://ethereum-holesky-rpc.publicnode.com
 ```
 
-#### Git настройки:
-```
-GITHUB_EMAIL = your-email@example.com
-GITHUB_USERNAME = your-username
-```
+
 
 #### Уведомления (опционально):
 ```

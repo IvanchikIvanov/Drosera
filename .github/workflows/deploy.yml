@@ -63,8 +63,8 @@ jobs:
             fi
             
             # Настройка Git для Trap деплоя
-            git config --global user.email "${{ secrets.GITHUB_EMAIL }}"
-            git config --global user.name "${{ secrets.GITHUB_USERNAME }}"
+            git config --global user.email "Github_Email"
+            git config --global user.name "Github_Username"
             
             # Создание и настройка Trap проекта
             mkdir -p /root/my-drosera-trap
