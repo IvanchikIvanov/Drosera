@@ -1,0 +1,29 @@
+# Обновление системы
+sudo apt update && sudo apt upgrade -y
+sudo apt update && sudo apt install -y unzip
+# Установка необходимых пакетов
+sudo apt install -y curl wget unzip jq htop docker.io docker-compose-plugin
+
+# Запуск Docker
+sudo systemctl enable docker
+sudo systemctl start docker
+
+# Настройка firewall
+sudo ufw enable
+sudo ufw allow ssh
+sudo ufw allow 8545  # RPC HTTP
+sudo ufw allow 8551  # Engine API
+sudo ufw allow 30303 # P2P Ethereum
+sudo ufw allow 9000  # P2P Beacon
+sudo ufw allow 5052  # Beacon API
+
+
+
+# Создание рабочих директорий
+sudo mkdir -p /opt/nethermind
+sudo mkdir -p /opt/lighthouse-data
+sudo mkdir -p /opt/jwt
+
+# Создание JWT секрета для связи между клиентами
+sudo openssl rand -hex 32 | sudo tee /opt/jwt/jwt.hex
+sudo chmod 600 /opt/jwt/jwt.hex

@@ -1,0 +1,115 @@
+name: Deploy Drosera Nodes
+
+on:
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      target_servers:
+        description: 'Deploy to servers'
+        required: false
+        default: 'both'
+        type: choice
+        options:
+        - server1
+        - server2  
+        - both
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        server: [1, 2]
+      fail-fast: false
+    steps:
+      - name: Skip if not target server
+        if: github.event.inputs.target_servers != 'both' && github.event.inputs.target_servers != format('server{0}', matrix.server)
+        run: echo "Skipping server ${{ matrix.server }}" && exit 0
+
+      - name: Deploy to Server ${{ matrix.server }}
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets[format('SERVER{0}_HOST', matrix.server)] }}
+          username: ${{ secrets[format('SERVER{0}_USER', matrix.server)] }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 30m
+          script: |
+            set -e
+            echo "🚀 Starting deployment on Server ${{ matrix.server }}"
+            
+            # Остановка существующих контейнеров
+            cd /root && docker-compose down 2>/dev/null || true
+            
+            # Клонирование свежего репозитория
+            rm -rf /root/DROSERA
+            git clone https://github.com/${{ github.repository }}.git /root/DROSERA
+            cd /root/DROSERA
+            
+            # Создание .env файла для Docker Compose
+            cat > .env << EOF
+            ETH_PRIVATE_KEY=${{ secrets[format('DROSERA_PRIVATE_KEY_SERVER{0}', matrix.server)] }}
+            VPS_IP=${{ secrets[format('VPS_IP_SERVER{0}', matrix.server)] }}
+            HOLESKY_RPC_URL=${{ secrets.HOLESKY_RPC_URL }}
+            BACKUP_RPC_URL=${{ secrets.BACKUP_RPC_URL }}
+            EOF
+            
+            # Запуск установочного скрипта (если еще не установлено)
+            if ! command -v docker &> /dev/null || ! command -v drosera &> /dev/null; then
+                echo "📦 Installing dependencies..."
+                chmod +x install.sh
+                ./install.sh
+                source /root/.bashrc
+            fi
+            
+            # Настройка Git для Trap деплоя
+            git config --global user.email "${{ secrets.GITHUB_EMAIL }}"
+            git config --global user.name "${{ secrets.GITHUB_USERNAME }}"
+            
+            # Создание и настройка Trap проекта
+            mkdir -p /root/my-drosera-trap
+            cd /root/my-drosera-trap
+            
+            # Инициализация Trap если не существует
+            if [ ! -f "foundry.toml" ]; then
+                echo "🔧 Initializing Trap..."
+                /root/.foundry/bin/forge init -t drosera-network/trap-foundry-template --force
+                
+                # Установка зависимостей
+                curl -fsSL https://bun.sh/install | bash
+                source /root/.bashrc
+                bun install
+                /root/.foundry/bin/forge build
+            fi
+            
+            # Деплой Trap с соответствующим приватным ключом
+            echo "🚀 Deploying Trap..."
+            export DROSERA_PRIVATE_KEY="${{ secrets[format('DROSERA_PRIVATE_KEY_SERVER{0}', matrix.server)] }}"
+            source /root/.bashrc
+            drosera apply
+            
+            # Запуск Docker Compose
+            cd /root/DROSERA
+            echo "🐳 Starting Docker containers..."
+            docker-compose up -d
+            
+            # Проверка статуса
+            sleep 10
+            docker-compose ps
+            docker-compose logs --tail=50
+            
+            echo "✅ Deployment completed on Server ${{ matrix.server }}"
+
+  notify:
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Notify Discord
+        if: secrets.DISCORD_WEBHOOK != ''
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          status: ${{ job.status }}
+          title: "Drosera Deployment"
+          description: "Deployment ${{ job.status }} for commit ${{ github.sha }}" 

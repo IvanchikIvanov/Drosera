@@ -1,0 +1,58 @@
+name: Health Check
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'  # Каждые 15 минут
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        server: [1, 2]
+    steps:
+      - name: Check Server ${{ matrix.server }} Health
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets[format('SERVER{0}_HOST', matrix.server)] }}
+          username: ${{ secrets[format('SERVER{0}_USER', matrix.server)] }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "🏥 Health check for Server ${{ matrix.server }}"
+            
+            cd /root/DROSERA || exit 1
+            
+            # Проверка Docker контейнера
+            if ! docker-compose ps | grep -q "Up"; then
+              echo "❌ Drosera container is down!"
+              exit 1
+            fi
+            
+            # Проверка портов
+            if ! netstat -tuln | grep -q ":31313"; then
+              echo "❌ P2P port 31313 not listening!"
+              exit 1
+            fi
+            
+            if ! netstat -tuln | grep -q ":31314"; then
+              echo "❌ Server port 31314 not listening!"
+              exit 1
+            fi
+            
+            # Проверка логов на критические ошибки
+            ERROR_COUNT=$(docker-compose logs --tail=100 | grep -i "fatal\|panic\|error" | wc -l)
+            if [ "$ERROR_COUNT" -gt 10 ]; then
+              echo "⚠️ High error count in logs: $ERROR_COUNT"
+            fi
+            
+            echo "✅ Server ${{ matrix.server }} is healthy"
+
+      - name: Notify if unhealthy
+        if: failure()
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          status: "failure"
+          title: "🚨 Drosera Health Check Failed"
+          description: "Server ${{ matrix.server }} health check failed!" 
