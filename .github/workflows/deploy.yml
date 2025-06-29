@@ -62,10 +62,6 @@ jobs:
                 source /root/.bashrc
             fi
             
-            # Настройка Git для Trap деплоя
-            git config --global user.email "Github_Email"
-            git config --global user.name "Github_Username"
-            
             # Создание и настройка Trap проекта
             mkdir -p /root/my-drosera-trap
             cd /root/my-drosera-trap
