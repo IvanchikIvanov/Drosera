@@ -2,31 +2,25 @@
 
 ## 🚀 Настройка GitHub Actions
 
-### 1. GitHub Secrets
+### 1. GitHub Variables и Secrets
 
 Добавь в **Settings** → **Secrets and variables** → **Actions**:
 
-#### Серверы:
+#### Variables (публичные настройки):
 ```
 SERVER1_HOST = IP_первого_сервера
 SERVER1_USER = root
 SERVER2_HOST = IP_второго_сервера
 SERVER2_USER = root
-SSH_PRIVATE_KEY = приватный_SSH_ключ_для_всех_серверов
-```
-
-#### Приватные ключи Drosera:
-```
-DROSERA_PRIVATE_KEY_SERVER1 = 0x123abc...
-DROSERA_PRIVATE_KEY_SERVER2 = 0x456def...
-```
-
-
-
-#### RPC настройки:
-```
 HOLESKY_RPC_URL = https://ваш-holesky-rpc.com
 BACKUP_RPC_URL = https://ethereum-holesky-rpc.publicnode.com
+```
+
+#### Secrets (приватные ключи):
+```
+SSH_PRIVATE_KEY = приватный_SSH_ключ_для_всех_серверов
+DROSERA_PRIVATE_KEY_SERVER1 = 0x123abc...
+DROSERA_PRIVATE_KEY_SERVER2 = 0x456def...
 ```
 
 
@@ -66,7 +60,6 @@ chmod 700 ~/.ssh
 
 #### Мониторинг:
 - Health checks каждые 15 минут автоматически
-- Уведомления в Discord при проблемах
 
 ## 📊 Мониторинг
 

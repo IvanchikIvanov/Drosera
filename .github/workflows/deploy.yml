@@ -30,8 +30,8 @@ jobs:
       - name: Deploy to Server ${{ matrix.server }}
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: ${{ secrets[format('SERVER{0}_HOST', matrix.server)] }}
-          username: ${{ secrets[format('SERVER{0}_USER', matrix.server)] }}
+          host: ${{ vars[format('SERVER{0}_HOST', matrix.server)] }}
+          username: ${{ vars[format('SERVER{0}_USER', matrix.server)] }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           command_timeout: 30m
           script: |
@@ -49,9 +49,9 @@ jobs:
             # Создание .env файла для Docker Compose
             cat > .env << EOF
             ETH_PRIVATE_KEY=${{ secrets[format('DROSERA_PRIVATE_KEY_SERVER{0}', matrix.server)] }}
-            VPS_IP=${{ secrets[format('SERVER{0}_HOST', matrix.server)] }}
-            HOLESKY_RPC_URL=${{ secrets.HOLESKY_RPC_URL }}
-            BACKUP_RPC_URL=${{ secrets.BACKUP_RPC_URL }}
+            VPS_IP=${{ vars[format('SERVER{0}_HOST', matrix.server)] }}
+            HOLESKY_RPC_URL=${{ vars.HOLESKY_RPC_URL }}
+            BACKUP_RPC_URL=${{ vars.BACKUP_RPC_URL }}
             EOF
             
             # Запуск установочного скрипта (если еще не установлено)

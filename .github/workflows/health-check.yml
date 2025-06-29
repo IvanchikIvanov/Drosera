@@ -15,8 +15,8 @@ jobs:
       - name: Check Server ${{ matrix.server }} Health
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: ${{ secrets[format('SERVER{0}_HOST', matrix.server)] }}
-          username: ${{ secrets[format('SERVER{0}_USER', matrix.server)] }}
+          host: ${{ vars[format('SERVER{0}_HOST', matrix.server)] }}
+          username: ${{ vars[format('SERVER{0}_USER', matrix.server)] }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             echo "🏥 Health check for Server ${{ matrix.server }}"
