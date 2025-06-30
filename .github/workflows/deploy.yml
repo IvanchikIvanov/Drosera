@@ -63,17 +63,14 @@ jobs:
                 echo "🔧 Configure Environments"
                 # Drosera CLI
                 curl -L https://app.drosera.io/install | bash
-                source /root/.bashrc
-                droseraup
+                source /root/.bashrc && droseraup
                 
                 # Foundry CLI
                 curl -L https://foundry.paradigm.xyz | bash
-                source /root/.bashrc
-                foundryup
+                source /root/.bashrc && foundryup
                 
                 # Bun
-                curl -fsSL https://bun.sh/install | bash
-                source /root/.bashrc
+                curl -fsSL https://bun.sh/install | bash && source /root/.bashrc
             fi
             
             echo "📋 Deploy Contract & Trap"
@@ -90,16 +87,14 @@ jobs:
                 /root/.foundry/bin/forge init -t drosera-network/trap-foundry-template --force
                 
                 echo "🔨 Compile Trap"
-                curl -fsSL https://bun.sh/install | bash
-                source /root/.bashrc
+                curl -fsSL https://bun.sh/install | bash && source /root/.bashrc
                 bun install
                 /root/.foundry/bin/forge build
             fi
             
             echo "🚀 Deploy Trap"
             export DROSERA_PRIVATE_KEY="${{ secrets[format('DROSERA_PRIVATE_KEY_SERVER{0}', matrix.server)] }}"
-            source /root/.bashrc
-            drosera apply
+            source /root/.bashrc && drosera apply
             
             echo "✅ Deployment completed on Server ${{ matrix.server }}"
 
