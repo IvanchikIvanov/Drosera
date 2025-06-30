@@ -27,8 +27,8 @@ jobs:
       - name: Deploy to Server ${{ matrix.server }}
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: ${{ vars[format('SERVER' + matrix.server + '_HOST')] }}
-          username: ${{ vars[format('SERVER' + matrix.server + '_USER')] }}
+          host: ${{ vars[format('SERVER{0}_HOST', matrix.server)] }}
+          username: ${{ vars[format('SERVER{0}_USER', matrix.server)] }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           command_timeout: 60m
           script: |
