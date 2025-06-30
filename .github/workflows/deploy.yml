@@ -11,9 +11,9 @@ on:
         default: 'both'
         type: choice
         options:
-        - server1
-        - server2  
-        - both
+          - server1
+          - server2
+          - both
 
 jobs:
   deploy:
@@ -22,80 +22,76 @@ jobs:
       matrix:
         server: [1, 2]
       fail-fast: false
+
     steps:
       - name: Deploy to Server ${{ matrix.server }}
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: ${{ vars[format('SERVER{0}_HOST', matrix.server)] }}
-          username: ${{ vars[format('SERVER{0}_USER', matrix.server)] }}
+          host: ${{ vars[format('SERVER' + matrix.server + '_HOST')] }}
+          username: ${{ vars[format('SERVER' + matrix.server + '_USER')] }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           command_timeout: 60m
           script: |
             set -e
             echo "🚀 Starting deployment on Server ${{ matrix.server }}"
-            
-            # Проверка что нужно ли устанавливать
-            if ! command -v docker &> /dev/null || ! command -v drosera &> /dev/null; then
+
+            if ! command -v docker &> /dev/null || ! test -f /root/.drosera/bin/drosera; then
                 export DEBIAN_FRONTEND=noninteractive
-                
+
                 echo "📦 Install Dependencies"
                 sudo apt-get update && sudo apt-get upgrade -y
-                sudo apt install curl ufw iptables build-essential git wget lz4 jq make gcc nano automake autoconf tmux htop nvme-cli libgbm1 pkg-config libssl-dev libleveldb-dev tar clang bsdmainutils ncdu unzip libleveldb-dev -y
-                
+                sudo apt install curl ufw iptables build-essential git wget lz4 jq make gcc nano automake autoconf tmux htop nvme-cli libgbm1 pkg-config libssl-dev libleveldb-dev tar clang bsdmainutils ncdu unzip -y
+
                 echo "🐳 Install Docker"
-                sudo apt update -y && sudo apt upgrade -y
-                for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do sudo apt-get remove $pkg -y || true; done
-                
-                sudo apt-get update
+                for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do sudo apt-get remove -y $pkg || true; done
+
                 sudo apt-get install ca-certificates curl gnupg -y
                 sudo install -m 0755 -d /etc/apt/keyrings
-                curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor --batch --yes -o /etc/apt/keyrings/docker.gpg
+                curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor --yes -o /etc/apt/keyrings/docker.gpg
                 sudo chmod a+r /etc/apt/keyrings/docker.gpg
-                
                 echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-                
-                sudo apt update -y && sudo apt upgrade -y
-                sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
-                
-                # Test Docker
-                sudo docker run hello-world
-                
+
+                sudo apt-get update && sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
+                sudo docker run hello-world || true
+
                 echo "🔧 Configure Environments"
+
                 # Drosera CLI
                 curl -L https://app.drosera.io/install | bash
-                source /root/.bashrc && droseraup
-                
+                source /root/.bashrc && /root/.drosera/bin/droseraup
+
                 # Foundry CLI
                 curl -L https://foundry.paradigm.xyz | bash
-                source /root/.bashrc && foundryup
-                
+                source /root/.bashrc && /root/.foundry/bin/foundryup
+
                 # Bun
-                curl -fsSL https://bun.sh/install | bash && source /root/.bashrc
+                curl -fsSL https://bun.sh/install | bash
+                source /root/.bashrc
             fi
-            
+
             echo "📋 Deploy Contract & Trap"
             mkdir -p /root/my-drosera-trap
             cd /root/my-drosera-trap
-            
-            # Git config
+
             git config --global user.email "Github_Email"
             git config --global user.name "Github_Username"
-            
-            # Initialize Trap (только если не существует)
-            if [ ! -f "foundry.toml" ]; then
-                echo "🔧 Initialize Trap"
-                /root/.foundry/bin/forge init -t drosera-network/trap-foundry-template --force
-                
-                echo "🔨 Compile Trap"
-                curl -fsSL https://bun.sh/install | bash && source /root/.bashrc
-                bun install
-                /root/.foundry/bin/forge build
-            fi
-            
-            echo "🚀 Deploy Trap"
-            export DROSERA_PRIVATE_KEY="${{ secrets[format('DROSERA_PRIVATE_KEY_SERVER{0}', matrix.server)] }}"
-            source /root/.bashrc && drosera apply
-            
-            echo "✅ Deployment completed on Server ${{ matrix.server }}"
 
- 
+            if [ ! -f "foundry.toml" ]; then
+              echo "🔧 Initialize Trap"
+              /root/.foundry/bin/forge init -t drosera-network/trap-foundry-template --force
+
+              echo "🔨 Compile Trap"
+              bun install
+              /root/.foundry/bin/forge build
+            fi
+
+            echo "🚀 Deploy Trap"
+            # Вставка приватного ключа
+            echo "${DROSERA_PRIVATE_KEY}" > /tmp/key.env
+            export DROSERA_PRIVATE_KEY=$(cat /tmp/key.env)
+
+            source /root/.bashrc && /root/.drosera/bin/drosera apply
+
+            echo "✅ Deployment completed on Server ${{ matrix.server }}"
+        env:
+          DROSERA_PRIVATE_KEY: ${{ matrix.server == 1 && secrets.DROSERA_PRIVATE_KEY_SERVER1 || secrets.DROSERA_PRIVATE_KEY_SERVER2 }}
