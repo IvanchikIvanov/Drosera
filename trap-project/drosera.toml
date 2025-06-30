@@ -1,0 +1,11 @@
+[trap]
+name = "MockResponseTrap"
+contract_path = "./Trap.sol"
+
+[chain]
+rpc_url = "https://ethereum-holesky-rpc.publicnode.com"
+chain_id = 17000
+
+[deployment]
+private_key_env = "PRIVATE_KEY"
+gas_limit = 2000000 

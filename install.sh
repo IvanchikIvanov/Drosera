@@ -10,12 +10,13 @@ check_command() {
 
 # Обновление системы
 echo "Обновление системы..."
+export DEBIAN_FRONTEND=noninteractive
 sudo apt-get update && sudo apt-get upgrade -y
 check_command "Ошибка при обновлении системы"
 
 # Установка базовых зависимостей
 echo "Установка базовых зависимостей..."
-sudo apt install curl ufw iptables build-essential git wget lz4 jq make gcc nano \
+sudo DEBIAN_FRONTEND=noninteractive apt install curl ufw iptables build-essential git wget lz4 jq make gcc nano \
     automake autoconf tmux htop nvme-cli libgbm1 pkg-config libssl-dev \
     libleveldb-dev tar clang bsdmainutils ncdu unzip -y
 check_command "Ошибка при установке базовых зависимостей"
@@ -29,7 +30,7 @@ done
 # Установка Docker
 echo "Установка Docker..."
 sudo apt-get update
-sudo apt-get install ca-certificates curl gnupg -y
+sudo DEBIAN_FRONTEND=noninteractive apt-get install ca-certificates curl gnupg -y
 sudo install -m 0755 -d /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 sudo chmod a+r /etc/apt/keyrings/docker.gpg
@@ -40,7 +41,7 @@ echo \
   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 sudo apt-get update
-sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
+sudo DEBIAN_FRONTEND=noninteractive apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
 check_command "Ошибка при установке Docker"
 
 # Тест Docker
